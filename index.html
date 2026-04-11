@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍷 와인 저장</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.card { background: white; border-radius: 16px; padding: 24px; max-width: 480px; width: 100%; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+h2 { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #1a1a1a; }
+.row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #f0f0f0; gap: 12px; }
+.row:last-of-type { border-bottom: none; }
+.label { color: #888; font-size: 13px; min-width: 60px; padding-top: 2px; }
+.value { font-size: 14px; color: #1a1a1a; font-weight: 500; text-align: right; }
+.btn { width: 100%; padding: 15px; background: #1D9E75; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
+.btn:hover { background: #0F6E56; }
+.btn:disabled { background: #ccc; cursor: not-allowed; }
+.status { margin-top: 14px; text-align: center; font-size: 14px; padding: 12px; border-radius: 8px; display: none; }
+.success { background: #e6f4f1; color: #0F6E56; display: block; }
+.error { background: #fde8e8; color: #c0392b; display: block; }
+.note { font-size: 12px; color: #aaa; text-align: center; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>🍷 와인 기록 저장</h2>
+  <div class="row"><span class="label">날짜</span><span class="value" id="date">-</span></div>
+  <div class="row"><span class="label">와인명</span><span class="value" id="wine_name" style="font-size:12px;">-</span></div>
+  <div class="row"><span class="label">빈티지</span><span class="value" id="vintage">-</span></div>
+  <div class="row"><span class="label">생산자</span><span class="value" id="producer">-</span></div>
+  <div class="row"><span class="label">국가</span><span class="value" id="country">-</span></div>
+  <div class="row"><span class="label">지역</span><span class="value" id="region">-</span></div>
+  <div class="row"><span class="label">품종</span><span class="value" id="grape">-</span></div>
+  <div class="row"><span class="label">장소</span><span class="value" id="place">-</span></div>
+  <div class="row"><span class="label">동반자</span><span class="value" id="companion">-</span></div>
+
+  <button class="btn" id="saveBtn" onclick="save()">구글 시트에 저장</button>
+  <div class="status" id="status"></div>
+  <p class="note" id="note"></p>
+</div>
+
+<script>
+const WEBHOOK = "https://hook.eu1.make.com/ru1xtu2h73zbs1mykyqtkbv757ddd7eb";
+
+function getParam(key) {
+  return decodeURIComponent(new URLSearchParams(window.location.search).get(key) || '-');
+}
+
+const fields = ['date','wine_name','vintage','producer','country','region','grape','place','companion'];
+fields.forEach(f => {
+  const el = document.getElementById(f);
+  if (el) el.innerText = getParam(f);
+});
+
+async function save() {
+  const btn = document.getElementById('saveBtn');
+  const status = document.getElementById('status');
+  btn.disabled = true;
+  btn.innerText = '저장 중...';
+
+  const data = {};
+  fields.forEach(f => data[f] = getParam(f));
+
+  try {
+    await fetch(WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    status.className = 'status success';
+    status.innerText = '✓ 구글 시트에 저장됐어요!';
+    btn.innerText = '저장 완료 ✓';
+  } catch(e) {
+    status.className = 'status error';
+    status.innerText = '저장 실패. 다시 시도해주세요.';
+    btn.disabled = false;
+    btn.innerText = '구글 시트에 저장';
+  }
+}
+</script>
+</body>
+</html>
