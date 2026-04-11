@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>와인 저장 · Wine Diary</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root { --wine: #6B1D1D; --gold: #C9A84C; --cream: #FAF7F2; --text: #2C1810; --muted: #8B7355; --border: rgba(107,29,29,0.12); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 1.5rem; }
+.card { background: white; border-radius: 20px; max-width: 480px; width: 100%; padding: 2rem; border: 1px solid var(--border); margin: 0 auto; }
+.card-header { margin-bottom: 1.5rem; }
+.site-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.4rem; }
+.wine-title-en { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 400; color: var(--text); line-height: 1.3; }
+.wine-title-ko { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+
+.type-select { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
+.type-opt { flex: 1; padding: 0.75rem; border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
+.type-opt.selected { border-color: var(--wine); background: rgba(107,29,29,0.04); }
+.type-opt .opt-icon { font-size: 1.3rem; }
+.type-opt .opt-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+.type-opt.selected .opt-label { color: var(--wine); font-weight: 500; }
+
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; margin-bottom: 1.25rem; }
+.field { padding: 0.5rem 0; border-bottom: 1px solid rgba(107,29,29,0.07); }
+.field.full { grid-column: 1/-1; }
+.field label { font-size: 0.67rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.15rem; }
+.field .val { font-size: 0.85rem; color: var(--text); }
+.desc-box { grid-column: 1/-1; background: var(--cream); border-radius: 10px; padding: 0.8rem 1rem; font-size: 0.8rem; color: var(--muted); line-height: 1.75; border: 1px solid var(--border); }
+.section-label { font-size: 0.67rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 0.45rem; margin-top: 1.1rem; }
+
+.rating-section { margin-bottom: 1.1rem; }
+.stars { display: flex; gap: 0.35rem; margin-top: 0.4rem; }
+.star { font-size: 1.5rem; cursor: pointer; color: #DDD; transition: color 0.15s; }
+.star.active { color: var(--gold); }
+
+textarea { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem; font-family: 'DM Sans', sans-serif; font-size: 0.83rem; color: var(--text); resize: vertical; min-height: 75px; outline: none; background: white; }
+textarea:focus { border-color: var(--wine); }
+
+.btn-save { width: 100%; padding: 1rem; background: var(--wine); color: white; border: none; border-radius: 12px; font-size: 0.95rem; font-family: 'DM Sans', sans-serif; cursor: pointer; margin-top: 1.25rem; transition: background 0.2s; }
+.btn-save:hover { background: #8B2D2D; }
+.btn-save:disabled { background: #CCC; cursor: not-allowed; }
+.status { margin-top: 0.85rem; text-align: center; font-size: 0.85rem; padding: 0.75rem; border-radius: 10px; display: none; }
+.status.success { background: rgba(107,29,29,0.07); color: var(--wine); display: block; }
+.status.error { background: #fde8e8; color: #c0392b; display: block; }
+.back-link { display: block; text-align: center; margin-top: 0.85rem; font-size: 0.78rem; color: var(--muted); text-decoration: none; }
+.back-link:hover { color: var(--wine); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="card-header">
+    <div class="site-label">Wine Diary</div>
+    <div class="wine-title-en" id="wineTitleEn">-</div>
+    <div class="wine-title-ko" id="wineTitleKo"></div>
+  </div>
+
+  <div class="type-select">
+    <div class="type-opt selected" id="opt-drunk" onclick="selectType('drunk')">
+      <div class="opt-icon">🍷</div><div class="opt-label">마신 와인</div>
+    </div>
+    <div class="type-opt" id="opt-search" onclick="selectType('search')">
+      <div class="opt-icon">🔍</div><div class="opt-label">관심 와인</div>
+    </div>
+  </div>
+
+  <div class="fields">
+    <div class="field"><label>빈티지</label><div class="val" id="f-vintage">-</div></div>
+    <div class="field"><label>생산자</label><div class="val" id="f-producer">-</div></div>
+    <div class="field"><label>국가</label><div class="val" id="f-country">-</div></div>
+    <div class="field"><label>지역</label><div class="val" id="f-region">-</div></div>
+    <div class="field"><label>품종</label><div class="val" id="f-grape">-</div></div>
+    <div class="field"><label>날짜</label><div class="val" id="f-date">-</div></div>
+    <div class="field"><label>장소</label><div class="val" id="f-place">-</div></div>
+    <div class="field"><label>동반자</label><div class="val" id="f-companion">-</div></div>
+  </div>
+
+  <span class="section-label">🍷 와인 설명</span>
+  <div class="desc-box" id="f-desc">-</div>
+
+  <span class="section-label">👤 와인메이커</span>
+  <div class="desc-box" id="f-maker">-</div>
+
+  <span class="section-label">📅 빈티지 노트</span>
+  <div class="desc-box" id="f-vintage-desc">-</div>
+
+  <div class="rating-section">
+    <span class="section-label">평점</span>
+    <div class="stars" id="stars">
+      <span class="star" onclick="setRating(1)">★</span>
+      <span class="star" onclick="setRating(2)">★</span>
+      <span class="star" onclick="setRating(3)">★</span>
+      <span class="star" onclick="setRating(4)">★</span>
+      <span class="star" onclick="setRating(5)">★</span>
+    </div>
+  </div>
+
+  <span class="section-label">📝 개인 노트</span>
+  <textarea id="noteInput" placeholder="테이스팅 노트, 기억하고 싶은 것들..."></textarea>
+
+  <button class="btn-save" id="saveBtn" onclick="saveWine()">저장하기</button>
+  <div class="status" id="status"></div>
+  <a class="back-link" href="index.html">← 와인 리스트로</a>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCbp1DLlRr9BXfI9aa9P0U04h8Ck1Xs6KQ",
+  authDomain: "luca-s-wine-list.firebaseapp.com",
+  projectId: "luca-s-wine-list",
+  storageBucket: "luca-s-wine-list.firebasestorage.app",
+  messagingSenderId: "877077090227",
+  appId: "1:877077090227:web:13f0ca227df4ebc5e785c6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const WEBHOOK = "https://hook.eu1.make.com/ru1xtu2h73zbs1mykyqtkbv757ddd7eb";
+
+function p(key) { return decodeURIComponent(new URLSearchParams(window.location.search).get(key) || ''); }
+
+const data = {
+  wine_name: p('wine_name'), vintage: p('vintage'), producer: p('producer'),
+  country: p('country'), region: p('region'), grape: p('grape'),
+  date: p('date'), place: p('place'), companion: p('companion'),
+  description: p('description'), maker_description: p('maker_description'),
+  vintage_description: p('vintage_description')
+};
+
+function getNameParts(name) {
+  const m = name.match(/^(.+?)\s*\(([^)]+)\)/);
+  return m ? { en: m[1].trim(), ko: m[2].trim() } : { en: name, ko: '' };
+}
+
+const { en, ko } = getNameParts(data.wine_name);
+document.getElementById('wineTitleEn').textContent = en || '-';
+document.getElementById('wineTitleKo').textContent = ko;
+document.getElementById('f-vintage').textContent = data.vintage || 'NV';
+document.getElementById('f-producer').textContent = data.producer || '-';
+document.getElementById('f-country').textContent = data.country || '-';
+document.getElementById('f-region').textContent = data.region || '-';
+document.getElementById('f-grape').textContent = data.grape || '-';
+document.getElementById('f-date').textContent = data.date || '-';
+document.getElementById('f-place').textContent = data.place || '-';
+document.getElementById('f-companion').textContent = data.companion || '-';
+document.getElementById('f-desc').textContent = data.description || '-';
+document.getElementById('f-maker').textContent = data.maker_description || '-';
+document.getElementById('f-vintage-desc').textContent = data.vintage_description || '-';
+
+let selectedType = 'drunk', selectedRating = 0;
+
+window.selectType = function(type) {
+  selectedType = type;
+  document.getElementById('opt-drunk').classList.toggle('selected', type==='drunk');
+  document.getElementById('opt-search').classList.toggle('selected', type==='search');
+};
+
+window.setRating = function(r) {
+  selectedRating = r;
+  document.querySelectorAll('.star').forEach((s, i) => s.classList.toggle('active', i < r));
+};
+
+window.saveWine = async function() {
+  const btn = document.getElementById('saveBtn');
+  const status = document.getElementById('status');
+  btn.disabled = true; btn.textContent = '저장 중...';
+
+  const wineData = { ...data, type: selectedType, rating: selectedRating, note: document.getElementById('noteInput').value, created_at: new Date().toISOString() };
+
+  try {
+    await addDoc(collection(db, 'wines'), wineData);
+    await fetch(WEBHOOK, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ date: data.date, wine_name: data.wine_name, vintage: data.vintage, producer: data.producer, country: data.country, region: data.region, grape: data.grape, place: data.place, companion: data.companion })
+    });
+    status.className = 'status success';
+    status.textContent = '✓ 저장됐어요! 구글 시트에도 백업됐어요.';
+    btn.textContent = '저장 완료 ✓';
+  } catch(e) {
+    status.className = 'status error';
+    status.textContent = '저장 실패: ' + e.message;
+    btn.disabled = false; btn.textContent = '저장하기';
+  }
+};
+</script>
+</body>
+</html>
