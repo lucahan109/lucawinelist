@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luca's Wine Diary</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --wine: #6B1D1D;
+  --wine-light: #8B2D2D;
+  --gold: #C9A84C;
+  --cream: #FAF7F2;
+  --dark: #1A1208;
+  --text: #2C1810;
+  --muted: #8B7355;
+  --border: rgba(107,29,29,0.15);
+  --card-bg: #FFFFFF;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+/* Header */
+header { background: var(--wine); padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+header h1 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 1.6rem; color: var(--cream); letter-spacing: 0.05em; }
+header h1 span { color: var(--gold); font-style: italic; }
+.header-tabs { display: flex; gap: 0.5rem; }
+.tab-btn { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.7); padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+.tab-btn.active, .tab-btn:hover { background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.6); }
+
+/* Main */
+main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+.stat-card { background: white; border-radius: 12px; padding: 1.2rem; border: 1px solid var(--border); text-align: center; }
+.stat-num { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; color: var(--wine); font-weight: 400; }
+.stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+/* Filter */
+.filter-row { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+.filter-btn { background: white; border: 1px solid var(--border); color: var(--muted); padding: 0.4rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+.filter-btn.active { background: var(--wine); color: white; border-color: var(--wine); }
+.search-input { flex: 1; min-width: 200px; padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 20px; font-size: 0.85rem; outline: none; font-family: 'DM Sans', sans-serif; }
+.search-input:focus { border-color: var(--wine); }
+
+/* Wine List */
+.wine-list { display: flex; flex-direction: column; gap: 1rem; }
+.wine-card { background: white; border-radius: 14px; border: 1px solid var(--border); padding: 1.25rem 1.5rem; display: grid; grid-template-columns: auto 1fr auto; gap: 1rem; align-items: start; transition: box-shadow 0.2s; cursor: pointer; }
+.wine-card:hover { box-shadow: 0 4px 20px rgba(107,29,29,0.1); }
+.wine-type-badge { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+.badge-drunk { background: rgba(107,29,29,0.1); }
+.badge-search { background: rgba(201,168,76,0.15); }
+.wine-info { min-width: 0; }
+.wine-name { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 500; color: var(--text); line-height: 1.3; margin-bottom: 0.3rem; }
+.wine-meta { font-size: 0.78rem; color: var(--muted); display: flex; gap: 0.8rem; flex-wrap: wrap; }
+.wine-meta span::before { content: '·'; margin-right: 0.4rem; }
+.wine-meta span:first-child::before { content: ''; margin: 0; }
+.wine-desc { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.wine-right { text-align: right; flex-shrink: 0; }
+.wine-rating { color: var(--gold); font-size: 0.85rem; letter-spacing: 0.1em; }
+.wine-date { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+.wine-companion { font-size: 0.75rem; color: var(--muted); }
+
+/* Empty */
+.empty { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+.empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+.empty p { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(26,18,8,0.6); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: white; border-radius: 20px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem; transform: translateY(20px); transition: transform 0.3s; }
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: var(--wine); margin-bottom: 1.5rem; }
+.modal-field { margin-bottom: 1rem; }
+.modal-field label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.modal-field .val { font-size: 0.95rem; color: var(--text); line-height: 1.6; }
+.modal-field.full-desc .val { color: var(--muted); font-size: 0.88rem; line-height: 1.8; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.rating-display { color: var(--gold); font-size: 1.2rem; }
+.note-box { background: var(--cream); border-radius: 10px; padding: 1rem; font-size: 0.88rem; color: var(--text); line-height: 1.7; min-height: 60px; }
+.modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
+.modal-header { position: relative; }
+.type-tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; margin-bottom: 1rem; }
+.type-tag.drunk { background: rgba(107,29,29,0.1); color: var(--wine); }
+.type-tag.search { background: rgba(201,168,76,0.15); color: #8B6914; }
+.btn-close-modal { width: 100%; padding: 0.75rem; background: var(--wine); color: white; border: none; border-radius: 10px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; margin-top: 1rem; }
+
+/* Loading */
+.loading { text-align: center; padding: 3rem; color: var(--muted); font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; }
+
+@media (max-width: 600px) {
+  header { padding: 1rem; }
+  header h1 { font-size: 1.2rem; }
+  .stats { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+  .stat-card { padding: 0.8rem; }
+  .stat-num { font-size: 1.6rem; }
+  .wine-card { grid-template-columns: auto 1fr; }
+  .wine-right { display: none; }
+  .modal-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Luca's <span>Wine Diary</span></h1>
+  <div class="header-tabs">
+    <button class="tab-btn active" onclick="setView('list')">리스트</button>
+  </div>
+</header>
+
+<main>
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-num" id="totalCount">0</div>
+      <div class="stat-label">총 와인</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="drunkCount">0</div>
+      <div class="stat-label">마신 와인</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="searchCount">0</div>
+      <div class="stat-label">관심 와인</div>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="setFilter('all', this)">전체</button>
+    <button class="filter-btn" onclick="setFilter('drunk', this)">🍷 마신 와인</button>
+    <button class="filter-btn" onclick="setFilter('search', this)">🔍 관심 와인</button>
+    <input class="search-input" type="text" placeholder="와인명, 생산자, 지역 검색..." oninput="filterWines(this.value)">
+  </div>
+
+  <div class="wine-list" id="wineList">
+    <div class="loading">와인 목록을 불러오는 중...</div>
+  </div>
+</main>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalContent">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="type-tag" id="modalTypeTag"></div>
+      <h2 id="modalName"></h2>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-field"><label>빈티지</label><div class="val" id="modalVintage"></div></div>
+      <div class="modal-field"><label>생산자</label><div class="val" id="modalProducer"></div></div>
+      <div class="modal-field"><label>국가</label><div class="val" id="modalCountry"></div></div>
+      <div class="modal-field"><label>지역</label><div class="val" id="modalRegion"></div></div>
+      <div class="modal-field"><label>품종</label><div class="val" id="modalGrape"></div></div>
+      <div class="modal-field"><label>평점</label><div class="val rating-display" id="modalRating"></div></div>
+    </div>
+    <div class="modal-field full-desc"><label>와인 설명</label><div class="val" id="modalDesc"></div></div>
+    <div class="modal-field" id="modalDateRow"><label>날짜 · 장소 · 동반자</label><div class="val" id="modalDateInfo"></div></div>
+    <div class="modal-field" id="modalNoteRow"><label>개인 노트</label><div class="note-box" id="modalNote"></div></div>
+    <button class="btn-close-modal" onclick="closeModal()">닫기</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCbp1DLlRr9BXfI9aa9P0U04h8Ck1Xs6KQ",
+  authDomain: "luca-s-wine-list.firebaseapp.com",
+  projectId: "luca-s-wine-list",
+  storageBucket: "luca-s-wine-list.firebasestorage.app",
+  messagingSenderId: "877077090227",
+  appId: "1:877077090227:web:13f0ca227df4ebc5e785c6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let allWines = [];
+let currentFilter = 'all';
+let currentSearch = '';
+
+async function loadWines() {
+  try {
+    const q = query(collection(db, 'wines'), orderBy('date', 'desc'));
+    const snap = await getDocs(q);
+    allWines = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateStats();
+    renderWines();
+  } catch(e) {
+    document.getElementById('wineList').innerHTML = '<div class="loading">데이터를 불러올 수 없습니다.</div>';
+  }
+}
+
+function updateStats() {
+  document.getElementById('totalCount').textContent = allWines.length;
+  document.getElementById('drunkCount').textContent = allWines.filter(w => w.type === 'drunk').length;
+  document.getElementById('searchCount').textContent = allWines.filter(w => w.type === 'search').length;
+}
+
+function renderWines() {
+  const list = document.getElementById('wineList');
+  let wines = allWines;
+  if (currentFilter !== 'all') wines = wines.filter(w => w.type === currentFilter);
+  if (currentSearch) {
+    const s = currentSearch.toLowerCase();
+    wines = wines.filter(w =>
+      (w.wine_name||'').toLowerCase().includes(s) ||
+      (w.producer||'').toLowerCase().includes(s) ||
+      (w.region||'').toLowerCase().includes(s) ||
+      (w.country||'').toLowerCase().includes(s)
+    );
+  }
+  if (wines.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🍷</div><p>아직 기록된 와인이 없어요</p></div>';
+    return;
+  }
+  list.innerHTML = wines.map(w => `
+    <div class="wine-card" onclick="showDetail('${w.id}')">
+      <div class="wine-type-badge ${w.type === 'drunk' ? 'badge-drunk' : 'badge-search'}">
+        ${w.type === 'drunk' ? '🍷' : '🔍'}
+      </div>
+      <div class="wine-info">
+        <div class="wine-name">${w.wine_name || '-'}</div>
+        <div class="wine-meta">
+          <span>${w.vintage || 'NV'}</span>
+          <span>${w.producer || ''}</span>
+          <span>${w.region || ''}</span>
+          <span>${w.country || ''}</span>
+        </div>
+        ${w.description ? `<div class="wine-desc">${w.description}</div>` : ''}
+      </div>
+      <div class="wine-right">
+        <div class="wine-rating">${w.rating ? '★'.repeat(w.rating) + '☆'.repeat(5 - w.rating) : ''}</div>
+        <div class="wine-date">${w.date || ''}</div>
+        <div class="wine-companion">${w.companion || ''}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.showDetail = function(id) {
+  const w = allWines.find(x => x.id === id);
+  if (!w) return;
+  document.getElementById('modalTypeTag').className = `type-tag ${w.type === 'drunk' ? 'drunk' : 'search'}`;
+  document.getElementById('modalTypeTag').textContent = w.type === 'drunk' ? '🍷 마신 와인' : '🔍 관심 와인';
+  document.getElementById('modalName').textContent = w.wine_name || '-';
+  document.getElementById('modalVintage').textContent = w.vintage || 'NV';
+  document.getElementById('modalProducer').textContent = w.producer || '-';
+  document.getElementById('modalCountry').textContent = w.country || '-';
+  document.getElementById('modalRegion').textContent = w.region || '-';
+  document.getElementById('modalGrape').textContent = w.grape || '-';
+  document.getElementById('modalRating').textContent = w.rating ? '★'.repeat(w.rating) + '☆'.repeat(5 - w.rating) : '미평가';
+  document.getElementById('modalDesc').textContent = w.description || '-';
+  const dateInfo = [w.date, w.place, w.companion].filter(Boolean).join(' · ');
+  document.getElementById('modalDateInfo').textContent = dateInfo || '-';
+  document.getElementById('modalNote').textContent = w.note || '노트 없음';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+window.closeModal = function(e) {
+  if (!e || e.target === document.getElementById('modalOverlay') || e.target.classList.contains('modal-close') || e.target.classList.contains('btn-close-modal')) {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+}
+
+window.setFilter = function(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderWines();
+}
+
+window.filterWines = function(s) {
+  currentSearch = s;
+  renderWines();
+}
+
+window.setView = function() {}
+
+loadWines();
+</script>
+</body>
+</html>
